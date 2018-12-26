@@ -7,22 +7,15 @@ You can override the default key-size of 128 bit with 192 or 256 bit by defining
 The API is very simple and looks like this (I am using C99 `<stdint.h>`-style annotated types):
 
 ```C
-/* Initialize context calling one of: */
-void AES_init_ctx(struct AES_ctx* ctx, const uint8_t* key);
-void AES_init_ctx_iv(struct AES_ctx* ctx, const uint8_t* key, const uint8_t* iv);
-
-/* ... or reset IV at random point: */
-void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv);
-
 /* Then start encrypting and decrypting with the functions below: */
-void AES_ECB_encrypt(struct AES_ctx* ctx, uint8_t* buf);
-void AES_ECB_decrypt(struct AES_ctx* ctx, uint8_t* buf);
+int32_t AES_ECBEncrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, uint8_t ucMode);
+int32_t AES_ECBDecrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, uint8_t ucMode);
 
-void AES_CBC_encrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length);
-void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length);
+int32_t AES_CBCEncrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, const uint8_t *pucIV, uint8_t ucMode);
+int32_t AES_CBCDecrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, const uint8_t *pucIV, uint8_t ucMode);
 
 /* Same function for encrypting as for decrypting in CTR mode */
-void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length);
+int32_t AES_CTRXcrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, const uint8_t *pucInitIV, uint8_t ucMode);
 ```
 
 Note: 
