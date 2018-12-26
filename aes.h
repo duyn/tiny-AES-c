@@ -3,23 +3,27 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // #define the macros below to 1/0 to enable/disable the mode of operation.
 //
-// CBC enables AES encryption in CBC-mode of operation.
-// CTR enables encryption in counter-mode.
-// ECB enables the basic ECB 16-byte block algorithm. All can be enabled simultaneously.
+// AES_CBC enables AES encryption in CBC-mode of operation.
+// AES_CTR enables encryption in counter-mode.
+// AES_ECB enables the basic ECB 16-byte block algorithm. All can be enabled simultaneously.
 
 // The #ifndef-guard allows it to be configured before #include'ing or at compile time.
-#ifndef CBC
-  #define CBC 1
+#ifndef AES_CBC
+  #define AES_CBC 1
 #endif
 
-#ifndef ECB
-  #define ECB 1
+#ifndef AES_ECB
+  #define AES_ECB 1
 #endif
 
-#ifndef CTR
-  #define CTR 1
+#ifndef AES_CTR
+  #define AES_CTR 1
 #endif
 
 
@@ -27,64 +31,61 @@
 //#define AES192 1
 //#define AES256 1
 
-#define AES_BLOCKLEN 16 //Block length in bytes AES is 128b block only
+#define AES_BLOCK_LEN 16 //Block length in bytes AES is 128b block only
 
 #if defined(AES256) && (AES256 == 1)
-    #define AES_KEYLEN 32
-    #define AES_keyExpSize 240
+    #define AES_KEY_LEN 32
+    #define AES_KEY_EXPSIZE 240
 #elif defined(AES192) && (AES192 == 1)
-    #define AES_KEYLEN 24
-    #define AES_keyExpSize 208
+    #define AES_KEY_LEN 24
+    #define AES_KEY_EXPSIZE 208
 #else
-    #define AES_KEYLEN 16   // Key length in bytes
-    #define AES_keyExpSize 176
+    #define AES_KEY_LEN 16   // Key length in bytes
+    #define AES_KEY_EXPSIZE 176
 #endif
 
-struct AES_ctx
-{
-  uint8_t RoundKey[AES_keyExpSize];
-#if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
-  uint8_t Iv[AES_BLOCKLEN];
-#endif
-};
 
-void AES_init_ctx(struct AES_ctx* ctx, const uint8_t* key);
-#if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
-void AES_init_ctx_iv(struct AES_ctx* ctx, const uint8_t* key, const uint8_t* iv);
-void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv);
-#endif
+#if defined(AES_ECB) && (AES_ECB == 1)
+// param pucOutBuf: output data after encrypt/decrypt
+//       uiBufLen : output buffer length
+//       pucInData: input data
+//       uiInLen  : input data length
+//       pucKey   : key of encrypt/decrypt
+//       ucMode   : mode of padding
+int32_t AES_ECBEncrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, uint8_t ucMode);
+int32_t AES_ECBDecrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, uint8_t ucMode);
 
-#if defined(ECB) && (ECB == 1)
-// buffer size is exactly AES_BLOCKLEN bytes; 
-// you need only AES_init_ctx as IV is not used in ECB 
-// NB: ECB is considered insecure for most uses
-void AES_ECB_encrypt(struct AES_ctx* ctx, uint8_t* buf);
-void AES_ECB_decrypt(struct AES_ctx* ctx, uint8_t* buf);
-
-#endif // #if defined(ECB) && (ECB == !)
+#endif // #if defined(AES_ECB) && (AES_ECB == !)
 
 
-#if defined(CBC) && (CBC == 1)
-// buffer size MUST be mutile of AES_BLOCKLEN;
-// Suggest https://en.wikipedia.org/wiki/Padding_(cryptography)#PKCS7 for padding scheme
-// NOTES: you need to set IV in ctx via AES_init_ctx_iv() or AES_ctx_set_iv()
-//        no IV should ever be reused with the same key 
-void AES_CBC_encrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length);
-void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length);
+#if defined(AES_CBC) && (AES_CBC == 1)
+// param pucOutBuf: output data after encrypt/decrypt
+//       uiBufLen : output buffer length
+//       pucInData: input data
+//       uiInLen  : input data length
+//       pucKey   : key of encrypt/decrypt
+//       pucIV    : iv
+//       ucMode   : mode of padding
+int32_t AES_CBCEncrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, const uint8_t *pucIV, uint8_t ucMode);
+int32_t AES_CBCDecrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, const uint8_t *pucIV, uint8_t ucMode);
 
-#endif // #if defined(CBC) && (CBC == 1)
+#endif // #if defined(AES_CBC) && (AES_CBC == 1)
 
 
-#if defined(CTR) && (CTR == 1)
+#if defined(AES_CTR) && (AES_CTR == 1)
 
 // Same function for encrypting as for decrypting. 
 // IV is incremented for every block, and used after encryption as XOR-compliment for output
 // Suggesting https://en.wikipedia.org/wiki/Padding_(cryptography)#PKCS7 for padding scheme
-// NOTES: you need to set IV in ctx with AES_init_ctx_iv() or AES_ctx_set_iv()
-//        no IV should ever be reused with the same key 
-void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length);
+int32_t AES_CTRXcrypt(uint8_t *pucOutBuf, uint32_t uiBufLen, uint8_t *pucInData, uint32_t uiInLen, const uint8_t *pucKey, const uint8_t *pucInitIV, uint8_t ucMode);
 
-#endif // #if defined(CTR) && (CTR == 1)
+#endif // #if defined(AES_CTR) && (AES_CTR == 1)
 
+#ifdef __cplusplus
+}
+#endif /* end of __cplusplus */
 
 #endif //_AES_H_
+
+/************************************** The End Of File **************************************/
+
